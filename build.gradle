@@ -7,6 +7,7 @@ plugins {
     id "signing"
     id "eclipse"
     id "idea"
+    id "groovy"
 }
 
 sourceCompatibility = 1.8
@@ -33,6 +34,12 @@ sourceSets {
     }
     intTest {
         java {
+            compileClasspath += sourceSets.main.output
+            compileClasspath += sourceSets.test.output
+            runtimeClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.test.output
+        }
+        groovy {
             compileClasspath += sourceSets.main.output
             compileClasspath += sourceSets.test.output
             runtimeClasspath += sourceSets.main.output
@@ -70,6 +77,9 @@ dependencies {
     testImplementation "org.slf4j:slf4j-nop:1.7.35"
     exampleImplementation "com.eclipsesource.minimal-json:minimal-json:0.9.5"
     checkstyle "com.puppycrawl.tools:checkstyle:9.3"
+    intTestImplementation "org.codehaus.groovy:groovy-all:3.0.8"
+    intTestImplementation platform("org.spockframework:spock-bom:2.0-groovy-3.0")
+    intTestImplementation "org.spockframework:spock-core"
 }
 
 compileJava {
@@ -168,8 +178,12 @@ artifacts {
 }
 
 test {
-    useJUnit {
-        excludeCategories "com.box.sdk.IntegrationTestJWT"
+//    useJUnit {
+//        excludeCategories "com.box.sdk.IntegrationTestJWT"
+//    }
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
     }
 }
 
@@ -239,5 +253,6 @@ idea {
     module {
         sourceDirs -= file("src/intTest/java")
         testSourceDirs += file("src/intTest/java")
+        testSourceDirs += file("src/intTest/groovy")
     }
 }
