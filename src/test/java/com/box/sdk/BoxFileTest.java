@@ -18,8 +18,11 @@ import com.eclipsesource.json.JsonObject;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.text.ParseException;
@@ -1126,4 +1129,31 @@ public class BoxFileTest {
             return 1;
         }
     }
+
+@Test
+public void serializeFile() throws IOException, ClassNotFoundException {
+    String fileId = "12345";
+    final String fileURL = "/2.0/files/" + fileId;
+    String result = TestConfig.getFixture("BoxFile/GetFileInfo200");
+
+    wireMockRule.stubFor(WireMock.get(WireMock.urlPathEqualTo(fileURL))
+        .willReturn(WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(result)));
+
+    BoxFile toSerialize = new BoxFile(api, fileId);
+    BoxFile.BoxFileDto dto = toSerialize.toDto();
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+    objectOutputStream.writeObject(dto);
+    objectOutputStream.close();
+
+    ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(outputStream.toByteArray()));
+    Object deserializedDto = objectInputStream.readObject();
+
+    assertEquals(dto, deserializedDto);
+    //now I can recreate BoxFile
+    new BoxFile(api, ((BoxFile.BoxFileDto) deserializedDto).getId());
+}
 }

@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -2085,4 +2087,42 @@ public class BoxFile extends BoxItem {
         }
     }
 
+    public static class BoxFileDto implements Serializable {
+        private final JsonObject jsonObject;
+        private final String id;
+
+        public BoxFileDto(JsonObject jsonObject) {
+            this.jsonObject = jsonObject;
+            this.id = jsonObject.get("id").asString();
+        }
+
+        public JsonObject getJsonObject() {
+            return jsonObject;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            BoxFileDto that = (BoxFileDto) o;
+            return jsonObject.equals(that.jsonObject) && id.equals(that.id);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(jsonObject, id);
+        }
+    }
+
+    public BoxFileDto toDto() {
+        return new BoxFileDto(Json.parse(getInfo().getJson()).asObject());
+    }
 }
